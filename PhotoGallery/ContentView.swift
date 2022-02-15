@@ -26,17 +26,9 @@ struct ImageGalleryView: View {
 		EventImage(id: UUID().uuidString, url: "7", voteCount: 1),
 		EventImage(id: UUID().uuidString, url: "8", voteCount: 1),
 		EventImage(id: UUID().uuidString, url: "9", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "10", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "11", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "12", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "13", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "14", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "15", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "16", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "17", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "18", voteCount: 1),
-		EventImage(id: UUID().uuidString, url: "19", voteCount: 1),
+		EventImage(id: UUID().uuidString, url: "10", voteCount: 1)
 	]
+
 	var body: some View {
 		GeometryReader { geo in
 			let geoWidth = geo.size.width
@@ -72,78 +64,87 @@ struct ImageGalleryView: View {
 				.animation(.spring(), value: self.selectedImageOffset)
 				.zIndex(1)
 			
-			if let index = self.selectedImageIndex {
-				LazyHStack(spacing: 0) {
-					ForEach(eventImages) { image in
-						GalleryImage(image: image)
-							.matchedGeometryEffect(id: eventImages.firstIndex(of: image), in: self.namespace, isSource: true)
-							.aspectRatio(contentMode: .fit)
-							.frame(width: geoWidth, height: geoHeight, alignment: .center)
-							.scaleEffect(eventImages.firstIndex(of: image) == index ? self.selectedImageScale : 1)
-							.offset(x: -CGFloat(index) * geoWidth)
-							.offset(eventImages.firstIndex(of: image) == index ? self.selectedImageOffset : .zero)
-					}
-				}
-				.animation(.easeOut(duration: 0.25), value: index)
-				.highPriorityGesture(
-					DragGesture()
-						.onChanged({ value in
-							DispatchQueue.main.async {
-								if !self.isClosing && (value.translation.width > 5 || value.translation.width < -5) {
-									self.isDragging = true
-								}
-								if !self.isDragging && (value.translation.height > 5 || value.translation.height < -5) {
-									self.isClosing = true
-								}
-							}
-						})
-						.updating(self.$selectedImageOffset, body: { value, state, _ in
-							if self.isDragging {
-								state = CGSize(width: value.translation.width, height: 0)
-							} else if self.isClosing {
-								state = CGSize(width: value.translation.width, height: value.translation.height)
-							}
-						})
-						.onEnded({ value in
-							DispatchQueue.main.async {
-								self.isDragging = false
-								if value.translation.height > 150 && self.isClosing {
-									withAnimation(.spring()) {
-										self.selectedImageIndex = nil
-										self.isClosing = true
-									}
-								} else {
-									self.isClosing = false
-									let offset = value.translation.width / geoWidth*6
-									if offset > 0.5 && self.selectedImageIndex! > 0 {
-										self.selectedImageIndex! -= 1
-									} else if offset < -0.5 && self.selectedImageIndex! < (eventImages.count - 1) {
-										self.selectedImageIndex! += 1
-									}
-								}
-							}
-						})
-				)
-				.onChange(of: self.selectedImageOffset) { imageOffset in
-					DispatchQueue.main.async {
-						let progress = imageOffset.height / geoHeight
-						if 1 - progress > 0.5 {
-							self.selectedImageScale = 1 - progress
-						}
-					}
-				}
-				.zIndex(2)
-			}
+			ImageFSV(selectedImageOffset: self.selectedImageOffset, selectedImageIndex: self.$selectedImageIndex, selectedImageScale: self.$selectedImageScale, isClosing: self.$isClosing, isDragging: self.$isDragging, eventImages: self.eventImages, geoWidth: geoWidth, geoHeight: geoHeight, namespace: self.namespace)
 		}
 		.preferredColorScheme(.dark)
 	}
 }
 
-//struct ImageFSV: View {
-//	var body: some View {
-//
-//	}
-//}
+struct ImageFSV: View {
+	@GestureState var selectedImageOffset: CGSize
+	@Binding var selectedImageIndex: Int?
+	@Binding var selectedImageScale: CGFloat
+	@Binding var isClosing: Bool
+	@Binding var isDragging: Bool
+	public var eventImages: [EventImage]
+	public let geoWidth: CGFloat
+	public let geoHeight: CGFloat
+	public let namespace: Namespace.ID
+	var body: some View {
+		if let index = self.selectedImageIndex {
+			LazyHStack(spacing: 0) {
+				ForEach(eventImages) { image in
+					GalleryImage(image: image)
+						.matchedGeometryEffect(id: eventImages.firstIndex(of: image), in: self.namespace, isSource: true)
+						.aspectRatio(contentMode: .fit)
+						.frame(width: geoWidth, height: geoHeight, alignment: .center)
+						.scaleEffect(eventImages.firstIndex(of: image) == index ? self.selectedImageScale : 1)
+						.offset(x: -CGFloat(index) * geoWidth)
+						.offset(eventImages.firstIndex(of: image) == index ? self.selectedImageOffset : .zero)
+				}
+			}
+			.animation(.easeOut(duration: 0.25), value: index)
+			.highPriorityGesture(
+				DragGesture()
+					.onChanged({ value in
+						DispatchQueue.main.async {
+							if !self.isClosing && (value.translation.width > 5 || value.translation.width < -5) {
+								self.isDragging = true
+							}
+							if !self.isDragging && (value.translation.height > 5 || value.translation.height < -5) {
+								self.isClosing = true
+							}
+						}
+					})
+					.updating(self.$selectedImageOffset, body: { value, state, _ in
+						if self.isDragging {
+							state = CGSize(width: value.translation.width, height: 0)
+						} else if self.isClosing {
+							state = CGSize(width: value.translation.width, height: value.translation.height)
+						}
+					})
+					.onEnded({ value in
+						DispatchQueue.main.async {
+							self.isDragging = false
+							if value.translation.height > 150 && self.isClosing {
+								withAnimation(.spring()) {
+									self.selectedImageIndex = nil
+									self.isClosing = true
+								}
+							} else {
+								self.isClosing = false
+								let offset = value.translation.width / geoWidth*6
+								if offset > 0.5 && self.selectedImageIndex! > 0 {
+									self.selectedImageIndex! -= 1
+								} else if offset < -0.5 && self.selectedImageIndex! < (eventImages.count - 1) {
+									self.selectedImageIndex! += 1
+								}
+							}
+						}
+					})
+			)
+			.onChange(of: self.selectedImageOffset) { imageOffset in
+				DispatchQueue.main.async {
+					let progress = imageOffset.height / geoHeight
+					if 1 - progress > 0.5 {
+						self.selectedImageScale = 1 - progress
+					}
+				}
+			}
+			.zIndex(2)
+		}
+	}
+}
 
 struct GalleryImage: View {
 	public var image: EventImage
