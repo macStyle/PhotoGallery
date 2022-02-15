@@ -12,6 +12,7 @@ struct ImagesGalleryView: View {
 	@GestureState private var selectedImageOffset: CGSize = .zero
 	@State private var selectedImageIndex: Int? = nil
 	@State private var selectedImageScale: CGFloat = 1
+	@State var didFinishClosingImage: Bool = true
 	@State private var showFSV: Bool = false
 	@State private var isSwiping: Bool = false
 	@State private var isSelecting: Bool = false
@@ -46,9 +47,11 @@ struct ImagesGalleryView: View {
 							.contentShape(Rectangle())
 							.onTapGesture {
 								DispatchQueue.main.async {
-									withAnimation(.spring()) {
-										self.showFSV = true
-										self.selectedImageIndex = eventImages.firstIndex(of: image)
+									if self.didFinishClosingImage {
+										withAnimation(.easeIn(duration: 0.2)) {
+											self.showFSV = true
+											self.selectedImageIndex = eventImages.firstIndex(of: image)
+										}
 									}
 								}
 							}
@@ -57,8 +60,7 @@ struct ImagesGalleryView: View {
 			}
 			.zIndex(0)
 			
-			ImageFSV(selectedImageOffset: self.selectedImageOffset, showFSV: self.$showFSV, selectedImageIndex: self.$selectedImageIndex, selectedImageScale: self.$selectedImageScale, isSelecting: self.$isSelecting, isSwiping: self.$isSwiping, eventImages: self.eventImages, geoWidth: geoWidth, geoHeight: geoHeight, namespace: self.namespace)
-				.zIndex(2)
+			ImageFSV(selectedImageOffset: self.selectedImageOffset, didFinishClosingImage: self.$didFinishClosingImage, showFSV: self.$showFSV, selectedImageIndex: self.$selectedImageIndex, selectedImageScale: self.$selectedImageScale, isSelecting: self.$isSelecting, isSwiping: self.$isSwiping, eventImages: self.eventImages, geoWidth: geoWidth, geoHeight: geoHeight, namespace: self.namespace)
 		}
 		.preferredColorScheme(.dark)
 	}
@@ -67,6 +69,7 @@ struct ImagesGalleryView: View {
 struct ImageFSV: View {
 	@GestureState var selectedImageOffset: CGSize
 	@State private var backgroundOpacity: CGFloat = 1
+	@Binding var didFinishClosingImage: Bool
 	@Binding var showFSV: Bool
 	@Binding var selectedImageIndex: Int?
 	@Binding var selectedImageScale: CGFloat
@@ -88,8 +91,9 @@ struct ImageFSV: View {
 						})
 							.aspectRatio(contentMode: .fit)
 							.frame(width: geoWidth, height: geoHeight, alignment: .center)
+							.scaleEffect(self.isSwiping ? 0.98 : 1.0)
 							.scaleEffect(eventImages.firstIndex(of: image) == self.selectedImageIndex ? self.selectedImageScale : 1)
-							.offset(x: -CGFloat(index) * geoWidth)
+							.offset(x: (CGFloat(index) * -geoWidth))
 							.offset(self.selectedImageOffset)
 							.opacity(eventImages.firstIndex(of: image) != self.selectedImageIndex && self.selectedImageOffset.height > 10 ? 0 : 1)
 				}
@@ -98,13 +102,15 @@ struct ImageFSV: View {
 				Color.black.ignoresSafeArea()
 					.opacity(self.backgroundOpacity)
 			)
-			.animation(.easeOut(duration: 0.25), value: index)
+			.animation(.easeOut(duration: 0.25), value: self.selectedImageOffset.width)
 			.highPriorityGesture(
 				DragGesture()
 					.onChanged({ value in
 						DispatchQueue.main.async {
 							if !self.isSelecting && (value.translation.width > 5 || value.translation.width < -5) {
-								self.isSwiping = true
+								withAnimation(.easeInOut(duration: 0.2)) {
+									self.isSwiping = true
+								}
 							}
 							if !self.isSwiping && (value.translation.height > 5 || value.translation.height < -5) {
 								self.isSelecting = true
@@ -122,7 +128,8 @@ struct ImageFSV: View {
 						DispatchQueue.main.async {
 							self.isSwiping = false
 							if value.translation.height > 150 && self.isSelecting {
-								withAnimation(.spring()) {
+								withAnimation(.interactiveSpring()) {
+									self.didFinishClosingImage = false
 									self.showFSV = false
 									self.selectedImageIndex = nil
 									self.isSelecting = false
@@ -164,6 +171,10 @@ struct ImageFSV: View {
 					}
 				}
 			}
+			.onDisappear {
+				self.didFinishClosingImage = true
+			}
+			.zIndex(2)
 		}
 	}
 }
