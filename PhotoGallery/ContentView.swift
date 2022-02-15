@@ -10,9 +10,9 @@ import SwiftUI
 struct ImagesGalleryView: View {
 	@Namespace var namespace
 	@GestureState private var selectedImageOffset: CGSize = .zero
-	@State private var showFSV: Bool = false
 	@State private var selectedImageIndex: Int? = nil
 	@State private var selectedImageScale: CGFloat = 1
+	@State private var showFSV: Bool = false
 	@State private var isSwiping: Bool = false
 	@State private var isSelecting: Bool = false
 	private var gridItemLayout = Array(repeating: GridItem(.flexible()), count: 3)
@@ -78,9 +78,6 @@ struct ImageFSV: View {
 	public let namespace: Namespace.ID
 	var body: some View {
 		if self.showFSV, let index = self.selectedImageIndex {
-			Color.black.ignoresSafeArea()
-				.opacity(self.backgroundOpacity)
-				.zIndex(1)
 			LazyHStack(spacing: 0) {
 				ForEach(eventImages) { image in
 					Image(image.url)
@@ -93,9 +90,14 @@ struct ImageFSV: View {
 							.frame(width: geoWidth, height: geoHeight, alignment: .center)
 							.scaleEffect(eventImages.firstIndex(of: image) == self.selectedImageIndex ? self.selectedImageScale : 1)
 							.offset(x: -CGFloat(index) * geoWidth)
-							.offset(eventImages.firstIndex(of: image) == self.selectedImageIndex ? self.selectedImageOffset : .zero)
+							.offset(self.selectedImageOffset)
+							.opacity(eventImages.firstIndex(of: image) != self.selectedImageIndex && self.selectedImageOffset.height > 10 ? 0 : 1)
 				}
 			}
+			.background(
+				Color.black.ignoresSafeArea()
+					.opacity(self.backgroundOpacity)
+			)
 			.animation(.easeOut(duration: 0.25), value: index)
 			.highPriorityGesture(
 				DragGesture()
@@ -123,6 +125,7 @@ struct ImageFSV: View {
 								withAnimation(.spring()) {
 									self.showFSV = false
 									self.selectedImageIndex = nil
+									self.isSelecting = false
 								}
 							} else {
 								self.isSelecting = false
