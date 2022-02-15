@@ -36,7 +36,8 @@ struct ImageGalleryView: View {
 			ScrollView(.vertical, showsIndicators: true) {
 				LazyVGrid(columns: self.gridItemLayout, alignment: .center, spacing: 0.5) {
 					ForEach(eventImages) { image in
-						GalleryImage(image: image)
+						Image(image.url)
+							.resizable()
 							.if(eventImages.firstIndex(of: image) == self.selectedImageIndex, transform: { view in
 								view
 									.matchedGeometryEffect(id: eventImages.firstIndex(of: image), in: self.namespace, isSource: self.isClosing ? true : false)
@@ -84,7 +85,8 @@ struct ImageFSV: View {
 		if let index = self.selectedImageIndex {
 			LazyHStack(spacing: 0) {
 				ForEach(eventImages) { image in
-					GalleryImage(image: image)
+					Image(image.url)
+						.resizable()
 						.matchedGeometryEffect(id: eventImages.firstIndex(of: image), in: self.namespace, isSource: true)
 						.aspectRatio(contentMode: .fit)
 						.frame(width: geoWidth, height: geoHeight, alignment: .center)
@@ -143,13 +145,5 @@ struct ImageFSV: View {
 			}
 			.zIndex(2)
 		}
-	}
-}
-
-struct GalleryImage: View {
-	public var image: EventImage
-	var body: some View {
-		Image(image.url)
-			.resizable()
 	}
 }
