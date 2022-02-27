@@ -10,12 +10,13 @@ import SwiftUI
 struct ImagesGalleryView: View {
 	@Namespace var namespace
 	@GestureState private var selectedImageOffset: CGSize = .zero
-	@State private var selectedImageIndex: Int? = nil
-	@State private var selectedImageScale: CGFloat = 1
+	@State var showFSVTab: Bool = false
 	@State var didFinishClosingImage: Bool = true
-	@State private var showFSV: Bool = false
-	@State private var isSwiping: Bool = false
-	@State private var isSelecting: Bool = false
+	@State var selectedImageIndex: Int? = nil
+	@State var selectedImageScale: CGFloat = 1
+	@State var showImageFSV: Bool = false
+	@State var isSwiping: Bool = false
+	@State var isSelecting: Bool = false
 	private var gridItemLayout = Array(repeating: GridItem(.flexible()), count: 3)
 	private let eventImages: [EventImage] = [
 		EventImage(id: UUID().uuidString, url: "1", voteCount: 1),
@@ -35,32 +36,54 @@ struct ImagesGalleryView: View {
 		GeometryReader { geo in
 			let geoWidth = geo.size.width
 			let geoHeight = geo.size.height
+			let geoHeightSafeArea = geo.size.height - (geo.safeAreaInsets.top - geo.safeAreaInsets.bottom)
+			Color.black.ignoresSafeArea()
+				.zIndex(0)
 			ScrollView(.vertical, showsIndicators: true) {
-				LazyVGrid(columns: self.gridItemLayout, alignment: .center, spacing: 0.5) {
-					ForEach(eventImages) { image in
-						Image(image.url)
-							.resizable()
-							.matchedGeometryEffect(id: eventImages.firstIndex(of: image), in: self.namespace, isSource: self.showFSV ? false : true)
-							.aspectRatio(contentMode: .fill)
-							.frame(width: (geoWidth/2.9) - 3, height: (geoWidth/2.9) - 3, alignment: .center)
-							.clipped()
-							.contentShape(Rectangle())
-							.onTapGesture {
-								DispatchQueue.main.async {
-									if self.didFinishClosingImage {
-										withAnimation(.easeIn(duration: 0.2)) {
-											self.showFSV = true
-											self.selectedImageIndex = eventImages.firstIndex(of: image)
+				ScrollViewReader { scroll in
+					LazyVGrid(columns: self.gridItemLayout, alignment: .center, spacing: 0.5) {
+						ForEach(eventImages) { image in
+							Image(image.url)
+								.resizable()
+								.matchedGeometryEffect(id: eventImages.firstIndex(of: image), in: self.namespace, isSource: true)
+								.aspectRatio(contentMode: .fill)
+								.frame(width: (geoWidth/2.9) - 3, height: (geoWidth/2.9) - 3, alignment: .center)
+								.clipped()
+								.contentShape(Rectangle())
+								.opacity(eventImages.firstIndex(of: image) == selectedImageIndex ? 0 : 1)
+								.id(eventImages.firstIndex(of: image))
+								.onChange(of: self.isSwiping) { value in
+									scroll.scrollTo(self.selectedImageIndex, anchor: .center)
+								}
+								.onTapGesture {
+									DispatchQueue.main.async {
+										if self.didFinishClosingImage {
+											withAnimation(.easeIn(duration: 0.2)) {
+												self.isSelecting = true
+												self.showImageFSV = true
+												self.selectedImageIndex = eventImages.firstIndex(of: image)
+												self.showFSVTab = true
+											}
 										}
 									}
 								}
-							}
+//								.onAppear {
+//									DispatchQueue.main.async {
+//										if self.didFinishClosingImage {
+//											withAnimation(.easeIn(duration: 0.2)) {
+//												self.showFSV = true
+//												self.selectedImageIndex = eventImages.firstIndex(of: image)
+//											}
+//										}
+//									}
+//								}
+						}
 					}
 				}
 			}
-			.zIndex(0)
+			.zIndex(1)
 			
-			ImageFSV(selectedImageOffset: self.selectedImageOffset, didFinishClosingImage: self.$didFinishClosingImage, showFSV: self.$showFSV, selectedImageIndex: self.$selectedImageIndex, selectedImageScale: self.$selectedImageScale, isSelecting: self.$isSelecting, isSwiping: self.$isSwiping, eventImages: self.eventImages, geoWidth: geoWidth, geoHeight: geoHeight, namespace: self.namespace)
+			ImageFSV(selectedImageOffset: self.selectedImageOffset, didFinishClosingImage: self.$didFinishClosingImage, showImageFSV: self.$showImageFSV, selectedImageIndex: self.$selectedImageIndex, selectedImageScale: self.$selectedImageScale, isSelecting: self.$isSelecting, isSwiping: self.$isSwiping, showFSVTab: self.$showFSVTab, eventImages: self.eventImages, geoWidth: geoWidth, geoHeightSafeArea: geoHeightSafeArea, namespace: self.namespace)
 		}
 		.preferredColorScheme(.dark)
 	}
@@ -70,32 +93,35 @@ struct ImageFSV: View {
 	@GestureState var selectedImageOffset: CGSize
 	@State private var backgroundOpacity: CGFloat = 1
 	@Binding var didFinishClosingImage: Bool
-	@Binding var showFSV: Bool
+	@Binding var showImageFSV: Bool
 	@Binding var selectedImageIndex: Int?
 	@Binding var selectedImageScale: CGFloat
 	@Binding var isSelecting: Bool
 	@Binding var isSwiping: Bool
+	@Binding var showFSVTab: Bool
 	public var eventImages: [EventImage]
 	public let geoWidth: CGFloat
-	public let geoHeight: CGFloat
+	public let geoHeightSafeArea: CGFloat
 	public let namespace: Namespace.ID
 	var body: some View {
-		if self.showFSV, let index = self.selectedImageIndex {
+		if self.showImageFSV, let index = self.selectedImageIndex {
 			LazyHStack(spacing: 0) {
 				ForEach(eventImages) { image in
 					Image(image.url)
 						.resizable()
+						.cornerRadius(5)
 						.if(self.eventImages.firstIndex(of: image) == self.selectedImageIndex && self.isSelecting, transform: { view in
 							view
 								.matchedGeometryEffect(id: self.selectedImageIndex, in: self.namespace, isSource: true)
 						})
 							.aspectRatio(contentMode: .fit)
-							.frame(width: geoWidth, height: geoHeight, alignment: .center)
+							.frame(width: geoWidth, height: geoHeightSafeArea, alignment: .center)
 							.scaleEffect(self.isSwiping ? 0.98 : 1.0)
 							.scaleEffect(eventImages.firstIndex(of: image) == self.selectedImageIndex ? self.selectedImageScale : 1)
-							.offset(x: (CGFloat(index) * -geoWidth))
+							.offset(x: -CGFloat(index) * geoWidth)
 							.offset(self.selectedImageOffset)
-							.opacity(eventImages.firstIndex(of: image) != self.selectedImageIndex && self.selectedImageOffset.height > 10 ? 0 : 1)
+							.opacity(eventImages.firstIndex(of: image) != self.selectedImageIndex && self.isSelecting ? 0 : 1)
+							.shadow(color: eventImages.firstIndex(of: image) == self.selectedImageIndex ? Color.black.opacity(0.5) : Color.clear, radius: 20, x: 0, y: 0)
 				}
 			}
 			.background(
@@ -111,9 +137,9 @@ struct ImageFSV: View {
 								withAnimation(.easeInOut(duration: 0.2)) {
 									self.isSwiping = true
 								}
-							}
-							if !self.isSwiping && (value.translation.height > 5 || value.translation.height < -5) {
+							} else if !self.isSwiping && (value.translation.height > 5 || value.translation.height < -5) {
 								self.isSelecting = true
+								self.showFSVTab = false
 							}
 						}
 					})
@@ -126,26 +152,42 @@ struct ImageFSV: View {
 					})
 					.onEnded({ value in
 						DispatchQueue.main.async {
-							self.isSwiping = false
+							self.selectedImageIndex = index
 							if value.translation.height > 150 && self.isSelecting {
 								withAnimation(.interactiveSpring()) {
 									self.didFinishClosingImage = false
-									self.showFSV = false
+									self.showImageFSV = false
+									self.showFSVTab = false
 									self.selectedImageIndex = nil
-									self.isSelecting = false
 								}
-							} else {
-								self.isSelecting = false
+							} else if self.isSwiping {
 								let offset = value.translation.width / geoWidth*6
-								if offset > 0.5 && self.selectedImageIndex ?? 0 > 0 {
+								if offset > 0.5 && index > 0 {
 									self.selectedImageIndex! -= 1
-								} else if offset < -0.5 && self.selectedImageIndex ?? 0 < (eventImages.count - 1) {
+								} else if offset < -0.5 && index < (eventImages.count - 1) {
 									self.selectedImageIndex! += 1
 								}
 							}
+							self.showFSVTab = true
+							self.isSelecting = false
+							self.isSwiping = false
 						}
 					})
 			)
+			.simultaneousGesture(TapGesture(count: 2).onEnded {
+				print("LIKE")
+			})
+			.gesture(TapGesture(count: 1).onEnded {
+				self.showFSVTab.toggle()
+			})
+			.onAppear {
+				DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+					self.isSelecting = false
+				}
+			}
+			.onDisappear {
+				self.didFinishClosingImage = true
+			}
 			.onChange(of: self.selectedImageOffset) { imageOffset in
 				DispatchQueue.main.async {
 					withAnimation(.easeIn) {
@@ -165,16 +207,19 @@ struct ImageFSV: View {
 						}
 					}
 					
-					let progress = imageOffset.height / geoHeight
+					let progress = imageOffset.height / geoHeightSafeArea
 					if 1 - progress > 0.5 {
 						self.selectedImageScale = 1 - progress
 					}
 				}
 			}
-			.onDisappear {
-				self.didFinishClosingImage = true
-			}
 			.zIndex(2)
 		}
+	}
+}
+
+struct ImageGallerysView_Previews: PreviewProvider {
+	static var previews: some View {
+		ImagesGalleryView()
 	}
 }
