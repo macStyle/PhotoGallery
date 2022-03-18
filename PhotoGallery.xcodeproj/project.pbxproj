@@ -9,20 +9,22 @@
 /* Begin PBXBuildFile section */
 		9938AC5027BB0EBF0022C081 /* ViewExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9938AC4F27BB0EBF0022C081 /* ViewExtension.swift */; };
 		995B797927BB096200122658 /* PhotoGalleryApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 995B797827BB096200122658 /* PhotoGalleryApp.swift */; };
-		995B797B27BB096200122658 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 995B797A27BB096200122658 /* ContentView.swift */; };
+		995B797B27BB096200122658 /* ImagesGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 995B797A27BB096200122658 /* ImagesGalleryView.swift */; };
 		995B797D27BB096400122658 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 995B797C27BB096400122658 /* Assets.xcassets */; };
 		995B798027BB096400122658 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 995B797F27BB096400122658 /* Preview Assets.xcassets */; };
-		995B798727BB0A1400122658 /* EventImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 995B798627BB0A1300122658 /* EventImage.swift */; };
+		995B798727BB0A1400122658 /* EventContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 995B798627BB0A1300122658 /* EventContent.swift */; };
+		99BB25AA27D85D6400E84243 /* BlurView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99BB25A927D85D6300E84243 /* BlurView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		9938AC4F27BB0EBF0022C081 /* ViewExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewExtension.swift; sourceTree = "<group>"; };
 		995B797527BB096200122658 /* PhotoGallery.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PhotoGallery.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		995B797827BB096200122658 /* PhotoGalleryApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoGalleryApp.swift; sourceTree = "<group>"; };
-		995B797A27BB096200122658 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		995B797A27BB096200122658 /* ImagesGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagesGalleryView.swift; sourceTree = "<group>"; };
 		995B797C27BB096400122658 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		995B797F27BB096400122658 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		995B798627BB0A1300122658 /* EventImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventImage.swift; sourceTree = "<group>"; };
+		995B798627BB0A1300122658 /* EventContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventContent.swift; sourceTree = "<group>"; };
+		99BB25A927D85D6300E84243 /* BlurView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,11 +58,12 @@
 			isa = PBXGroup;
 			children = (
 				995B797827BB096200122658 /* PhotoGalleryApp.swift */,
-				995B797A27BB096200122658 /* ContentView.swift */,
-				995B798627BB0A1300122658 /* EventImage.swift */,
+				995B797A27BB096200122658 /* ImagesGalleryView.swift */,
+				995B798627BB0A1300122658 /* EventContent.swift */,
 				995B797C27BB096400122658 /* Assets.xcassets */,
 				995B797E27BB096400122658 /* Preview Content */,
 				9938AC4F27BB0EBF0022C081 /* ViewExtension.swift */,
+				99BB25A927D85D6300E84243 /* BlurView.swift */,
 			);
 			path = PhotoGallery;
 			sourceTree = "<group>";
@@ -143,10 +146,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				995B797B27BB096200122658 /* ContentView.swift in Sources */,
+				995B797B27BB096200122658 /* ImagesGalleryView.swift in Sources */,
 				995B797927BB096200122658 /* PhotoGalleryApp.swift in Sources */,
+				99BB25AA27D85D6400E84243 /* BlurView.swift in Sources */,
 				9938AC5027BB0EBF0022C081 /* ViewExtension.swift in Sources */,
-				995B798727BB0A1400122658 /* EventImage.swift in Sources */,
+				995B798727BB0A1400122658 /* EventContent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
